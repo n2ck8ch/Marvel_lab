@@ -1,11 +1,14 @@
-package com.example.marvellab
+package com.example.marvellab.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,99 +18,67 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.pager.*
+import com.example.marvellab.R
+import com.example.marvellab.data.Character
 
-data class Hero(val name: String, val imageRes: Int, val description: String)
-
-@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun HeroesScreen(navController: NavController) {
-    // Список героев для примера
-    val heroes = listOf(
-        Hero("Человек-паук", R.drawable.spiderman_image, "Супергерой с паучьими способностями."),
-        Hero("Железный человек", R.drawable.ironman_image, "Гениальный миллиардер и изобретатель."),
-        Hero("Тор", R.drawable.thor_image, "Бог Грома."),
-        Hero("Халк", R.drawable.hulk_image, "Сила, которой не остановить."),
-        Hero("Капитан Америка", R.drawable.captain_america_image, "Суперсолдат и лидер.")
-    )
+fun HeroesScreen(
+    navController: NavController,
+    viewModel: MarvelViewModel // Здесь используем правильный MarvelViewModel
+) {
+    // Загружаем список персонажей из ViewModel
+    val characters = viewModel.characters.collectAsState().value
 
-    // Контейнер для всего содержимого
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Логотип Marvel в верхней части экрана
-        Image(
-            painter = painterResource(id = R.drawable.marvel_logo), // Логотип Marvel
-            contentDescription = "Marvel Logo",
-            modifier = Modifier
-                .padding(top = 16.dp)
-                .size(150.dp)
-                .align(Alignment.CenterHorizontally),
-            contentScale = ContentScale.Crop
-        )
+    // Загружаем данные, если они еще не загружены
+    LaunchedEffect(Unit) {
+        viewModel.fetchCharacters()
+    }
 
-        // Текст "Choose your hero"
+    // Заголовок экрана
+    Column(modifier = Modifier.padding(16.dp)) {
         Text(
-            text = "Choose your hero",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.Black,
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .align(Alignment.CenterHorizontally)
+            text = "Персонажи Marvel",
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.Black
         )
 
-        Spacer(modifier = Modifier.height(16.dp)) // Отступ между текстом и пагером
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Стартуем пагер с одним героем на экране
-        HorizontalPager(
-            count = heroes.size, // Количество героев
-            modifier = Modifier.fillMaxSize(),
-            state = rememberPagerState() // Состояние пагера
-        ) { page ->
-            val hero = heroes[page] // Получаем героя для текущей страницы
-
-            // Контент для каждого героя
-            HeroCard(hero, navController)
+        // Список персонажей
+        LazyColumn {
+            items(characters) { character: Character -> // Указываем тип явно
+                HeroItem(character = character, navController = navController)
+            }
         }
     }
 }
 
 @Composable
-fun HeroCard(hero: Hero, navController: NavController) {
-    // Карточка героя
-    Card(
+fun HeroItem(character: Character, navController: NavController) {
+    Row(
         modifier = Modifier
-            .width(250.dp) // Ширина карточки
+            .fillMaxWidth()
             .padding(8.dp)
             .clickable {
-                // Навигация на экран с деталями героя
-                navController.navigate("heroDetail/${hero.name}")
+                // Переход к экрану с деталями героя, передаем имя персонажа
+                navController.navigate("heroDetail/${character.name}")
             },
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Изображение героя
-            Image(
-                painter = painterResource(id = hero.imageRes),
-                contentDescription = hero.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+        // Изображение персонажа (используем пример изображения)
+        Image(
+            painter = painterResource(id = R.drawable.spiderman_image), // Это пример, замените на реальное изображение
+            contentDescription = character.name,
+            modifier = Modifier.size(60.dp),
+            contentScale = ContentScale.Crop
+        )
 
-            // Информация о герое
-            Text(
-                text = hero.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = hero.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Информация о персонаже
+        Column {
+            Text(text = character.name, style = MaterialTheme.typography.bodyMedium)
+            Text(text = character.description, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -115,6 +86,9 @@ fun HeroCard(hero: Hero, navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewHeroesScreen() {
-    val navController = rememberNavController()
-    HeroesScreen(navController = navController)
+    // Передаем navController для preview
+    HeroesScreen(
+        navController = rememberNavController(),
+        viewModel = MarvelViewModel(repository = TODO()) // Используем правильный ViewModel
+    )
 }

@@ -5,35 +5,44 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Color // Импортируем Color для серого фона
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.res.painterResource // Для загрузки изображений
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.marvellab.ui.theme.MarvelLabTheme
+import androidx.lifecycle.viewmodel.compose.viewModel // Импортируем viewModel
+import com.example.marvellab.data.MarvelRepository
+import com.example.marvellab.ui.MarvelViewModel
+import com.example.marvellab.ui.HeroesScreen
+import com.example.marvellab.ui.HeroDetailScreen
+val marvelRepository = MarvelRepository(MarvelApiClient.getApiService())
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // Используем стандартную тему MaterialTheme
             MaterialTheme {
-                // Оборачиваем в Surface и изменяем фон на серый
-                Surface(color = Color.Gray) { // Устанавливаем серый фон
-                    // Настройка навигации
+                Surface(color = Color.Gray) {
                     val navController = rememberNavController()
+                    val marvelRepository = MarvelRepository(MarvelApiClient.getApiService())
+
+                    // Используем фабрику для создания ViewModel
+                    val viewModel: MarvelViewModel = viewModel(
+                        factory = MarvelViewModel.Factory(marvelRepository)
+                    )
+
                     NavHost(navController = navController, startDestination = "heroesList") {
                         composable("heroesList") {
-                            HeroesScreen(navController) // Отображаем экран с героями
+                            // Передаем viewModel в HeroesScreen
+                            HeroesScreen(
+                                navController = navController,
+                                viewModel = viewModel
+                            )
                         }
                         composable("heroDetail/{heroName}") { backStackEntry ->
-                            val heroName = backStackEntry.arguments?.getString("heroName")
-                            if (heroName != null) {
-                                HeroDetailScreen(heroName = heroName, navController = navController)
-                            }
+                            val heroName = backStackEntry.arguments?.getString("heroName") ?: ""
+                            HeroDetailScreen(heroName = heroName, navController = navController)
                         }
                     }
                 }
@@ -45,7 +54,13 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    MaterialTheme {
-        HeroesScreen(navController = rememberNavController()) // Передаем корректный навигационный контроллер
-    }
+    val navController = rememberNavController()
+    val marvelRepository = MarvelRepository(MarvelApiClient.getApiService())
+
+    // Используем фабрику для создания ViewModel
+    val viewModel: MarvelViewModel = viewModel(
+        factory = MarvelViewModel.Factory(marvelRepository)
+    )
+
+    HeroesScreen(navController = navController, viewModel = viewModel)
 }

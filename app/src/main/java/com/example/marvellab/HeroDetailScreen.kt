@@ -105,7 +105,7 @@ fun HeroDetailScreen(heroName: String, navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Детали героя
+            // Детали героя (исправлено на описание, т.к. это поле из HeroDetail)
             Text(
                 text = hero.details,
                 style = MaterialTheme.typography.bodyLarge,

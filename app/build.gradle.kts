@@ -54,6 +54,8 @@ dependencies {
 
     // Добавлена зависимость для Coil
     implementation(libs.coil.compose)
+    implementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.espresso.core)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -66,5 +68,11 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.0")
     implementation ("com.google.accompanist:accompanist-pager:0.24.13-rc")
     implementation ("com.google.accompanist:accompanist-pager:0.28.0")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation ("com.squareup.moshi:moshi:1.13.0")
+    implementation ("com.squareup.moshi:moshi-kotlin:1.13.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.0")
 
 }
